@@ -39,16 +39,18 @@ function App() {
     const block = editorState.getCurrentContent().getBlockForKey(blockKey);
     const blockText = block.getText();
 
-    if (start === 1 && chars === ' ') {
-      let updatedState = editorState;
-
+    let updatedState = editorState;
+    console.log(start, chars);
+       if (start === 1 && chars === ' ') {
       // Detect formatting triggers
       if (blockText.startsWith('#')) {
-        // Apply "heading" style
-        updatedState = applyBlockStyle(editorState, 'header-one');
-      } else if (blockText.startsWith('*')) {
-        // Apply "bold" style
-        updatedState = applyInlineStyle(editorState, 'BOLD');
+        updatedState = applyBlockStyle(editorState, 'header-one'); // Heading
+      } else if (blockText.startsWith('* ') && blockText.length === 2) {
+        updatedState = applyInlineStyle(editorState, 'BOLD'); // Bold
+      } else if (blockText.startsWith('** ') && blockText.length === 3) {
+        updatedState = applyInlineStyle(editorState, 'RED'); // Red color
+      } else if (blockText.startsWith('*** ') && blockText.length === 4) {
+        updatedState = applyInlineStyle(editorState, 'UNDERLINE'); // Underline
       }
 
       // Remove the trigger characters (#, *, **, ***)
