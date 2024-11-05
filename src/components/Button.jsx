@@ -1,4 +1,4 @@
-function Button(...props) {
+function Button({ ...props }) {
   return (
     <>
       <button {...props} style={styles.button}>
