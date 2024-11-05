@@ -1,5 +1,9 @@
 function Title() {
-  return <div>Title</div>;
+  return (
+    <>
+      <h1>Demo editor by Vishal</h1>
+    </>
+  );
 }
 
 export default Title;
