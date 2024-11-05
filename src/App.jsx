@@ -32,28 +32,59 @@ function App() {
     return 'not-handled';
   };
 
-  const handleBeforeInput = (chars) => {
-    const currentContent = editorState.getCurrentContent();
+  const handleBeforeInput = (chars, editorState) => {
     const selection = editorState.getSelection();
     const start = selection.getStartOffset();
     const blockKey = selection.getStartKey();
-    const blockText = currentContent.getBlockForKey(blockKey).getText();
+    const block = editorState.getCurrentContent().getBlockForKey(blockKey);
+    const blockText = block.getText();
 
-    if (chars === ' ' && start === 1) {
-      let updatedContent;
+    if (start === 1 && chars === ' ') {
+      let updatedState = editorState;
+
+      // Detect formatting triggers
       if (blockText.startsWith('#')) {
-        updatedContent = Modifier.applyInlineStyle(
-          currentContent,
-          selection,
-          'BOLD'
-        );
-        setEditorState(
-          EditorState.push(editorState, updatedContent, 'change-inline-style')
-        );
-        return 'handled';
+        // Apply "heading" style
+        updatedState = applyBlockStyle(editorState, 'header-one');
+      } else if (blockText.startsWith('*')) {
+        // Apply "bold" style
+        updatedState = applyInlineStyle(editorState, 'BOLD');
       }
+
+      // Remove the trigger characters (#, *, **, ***)
+      const contentState = Modifier.replaceText(
+        updatedState.getCurrentContent(),
+        selection.merge({ anchorOffset: 0, focusOffset: start }),
+        ''
+      );
+      setEditorState(
+        EditorState.push(updatedState, contentState, 'remove-range')
+      );
+      return 'handled';
     }
     return 'not-handled';
+  };
+
+  // Helper function to apply block styles (like "heading")
+  const applyBlockStyle = (editorState, blockType) => {
+    const contentState = editorState.getCurrentContent();
+    const selection = editorState.getSelection();
+    const newContentState = Modifier.setBlockType(
+      contentState,
+      selection,
+      blockType
+    );
+    return EditorState.push(editorState, newContentState, 'change-block-type');
+  };
+
+  // Helper function to apply inline styles (like "bold", "red", "underline")
+  const applyInlineStyle = (editorState, style) => {
+    return RichUtils.toggleInlineStyle(editorState, style);
+  };
+
+  // Custom inline style map
+  const customStyleMap = {
+    RED: { color: 'red' },
   };
 
   const handleSave = () => {
@@ -92,7 +123,8 @@ function App() {
           editorState={editorState}
           handleKeyCommand={handleKeyCommand}
           onChange={setEditorState}
-          handleBeforeInput={handleBeforeInput}
+          handleBeforeInput={(chars) => handleBeforeInput(chars, editorState)}
+          customStyleMap={customStyleMap}
         />
       </div>
     </main>
